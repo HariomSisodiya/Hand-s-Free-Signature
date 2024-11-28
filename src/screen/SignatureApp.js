@@ -10,15 +10,17 @@ import {
   View,
   Dimensions,
   ScrollView,
+  Image,
 } from 'react-native';
 import SignatureScreen from 'react-native-signature-canvas';
-import FS from 'react-native-fs';
+import FS, {exists} from 'react-native-fs';
 
 const height = Dimensions.get('window').height;
 const width = Dimensions.get('window').width;
 
 const SignatureApp = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [imagePath, setImagePath] = useState(null);
   const signatureRef = useRef();
 
   const handleClear = () => {
@@ -38,20 +40,28 @@ const SignatureApp = () => {
 
   const handleOK = signature => {
     console.log(signature);
-    const path = FS.DownloadDirectoryPath + '/signature.png';
+    const path =
+      FS.ExternalCachesDirectoryPath + `/signature_${Date.now()}.png`;
 
     const base64Data = signature.replace('data:image/png;base64', '');
-
     FS.writeFile(path, base64Data, 'base64')
       .then(() => {
+        // setImagePath(signature);
         Alert.alert('Success', 'Signature Saved Successfully');
+        const savedFilePath = 'file://' + path;
+        setImagePath(savedFilePath);
       })
       .catch(err => {
         console.log('ERROR in Signature : ', err);
         Alert.alert('Error', 'Failed to Save Signature');
       });
   };
+  console.log('Image Path : ', imagePath);
+  // const getSignaturePath = async () => {
 
+  //   const isExists = await exists(path);
+  //   console.log('Path Exists : ', isExists);
+  // };
   // const readFile = () => {
   //   const getPath = FS.CachesDirectoryPath + '/signature.png';
   //   FS.readFile(getPath, 'base64')
@@ -71,6 +81,10 @@ const SignatureApp = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <Image
+        source={{uri: imagePath}}
+        style={{width: 200, height: 200, borderWidth: 1, marginBottom: 10}}
+      />
       <Button
         title="Open Signature Modal"
         onPress={() => setIsModalVisible(true)}
